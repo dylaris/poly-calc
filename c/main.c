@@ -43,9 +43,9 @@ typedef enum {
 } OP;
 
 typedef enum {
-    AST_NUMBER,
-    AST_UNARY,
-    AST_BINARY,
+    AST_INTEGER,
+    AST_UNAOP,
+    AST_BINOP,
 } ASTNodeKind;
 
 typedef struct ASTNode ASTNode;
@@ -97,10 +97,10 @@ float evaluate(ASTNode *root)
     if (!root) return 0.0f;
 
     switch (root->kind) {
-    case AST_NUMBER:
+    case AST_INTEGER:
         return (float) root->value;
 
-    case AST_UNARY: {
+    case AST_UNAOP: {
         float val = evaluate(root->left);
         switch (root->op) {
         case OP_POS: return val;
@@ -109,7 +109,7 @@ float evaluate(ASTNode *root)
         }
     }
 
-    case AST_BINARY: {
+    case AST_BINOP: {
         float l = evaluate(root->left);
         float r = evaluate(root->right);
         switch (root->op) {
@@ -185,7 +185,6 @@ cleanup:
 
     return 0;
 }
-
 
 TokenStream tokenize(const char *input)
 {
@@ -264,7 +263,7 @@ ASTNode *parse_expr(void)
         }
         consume();
         ASTNode *right = parse_term();
-        left = make_node(AST_BINARY, op, left, right, 0);
+        left = make_node(AST_BINOP, op, left, right, 0);
     }
 end:
     return left;
@@ -283,7 +282,7 @@ ASTNode *parse_term(void)
         }
         consume();
         ASTNode *right = parse_factor();
-        left = make_node(AST_BINARY, op, left, right, 0);
+        left = make_node(AST_BINOP, op, left, right, 0);
     }
 end:
     return left;
@@ -296,7 +295,7 @@ ASTNode *parse_factor(void)
         OP op = tok.kind == TOK_PLUS ? OP_POS : OP_NEG;
         consume();
         ASTNode *node = parse_atom();
-        return make_node(AST_UNARY, op, node, NULL, 0);
+        return make_node(AST_UNAOP, op, node, NULL, 0);
     }
     return parse_atom();
 }
@@ -309,16 +308,17 @@ ASTNode *parse_atom(void)
         static char buffer[128] = {0};
         snprintf(buffer, sizeof(buffer), "%.*s", (int) tok.lexeme.length, tok.lexeme.start);
         consume();
-        return make_node(AST_NUMBER, 0, NULL, NULL, atoi(buffer));
+        return make_node(AST_INTEGER, 0, NULL, NULL, atoi(buffer));
     case TOK_LPAREN:
         consume();
         ASTNode *node = parse_expr();
         tok = peek();
         if (tok.kind != TOK_RPAREN) {
+            free_nodes(node);
             report_error(tok.lexeme.start, "unclosed parenthesis");
-        } else {
-            consume();
+            return NULL;
         }
+        consume();
         return node;
     default:
         report_error(tok.lexeme.start, "expected number or '('");

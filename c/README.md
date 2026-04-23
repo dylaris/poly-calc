@@ -1,4 +1,4 @@
-# Build
+# Start
 
 ```console
 $ cc -o main main.c
