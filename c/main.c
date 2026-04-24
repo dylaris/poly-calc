@@ -321,7 +321,7 @@ ASTNode *parse_atom(void)
         consume();
         return node;
     default:
-        report_error(tok.lexeme.start, "expected number or '('");
+        report_error(tok.lexeme.start, "expect number or '('");
         return NULL;
     }
 }

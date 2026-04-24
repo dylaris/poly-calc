@@ -246,7 +246,7 @@ function Parser:parse_atom()
         self:consume()
         return node
     else
-        report_error(tok.position, "expected number or '('")
+        report_error(tok.position, "expect number or '('")
         return nil
     end
 end
