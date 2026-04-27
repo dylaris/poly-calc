@@ -139,6 +139,12 @@ struct Parser {
 
     bool parse() {
         root = parse_expr();
+
+        Token tok{ peek() };
+        if (tok.kind != TokenKind::Eof) {
+            diag.report(tok.lexeme.data(), "unexpected token");
+        }
+
         if (diag.has_error == true) return false;
         return true;
     }

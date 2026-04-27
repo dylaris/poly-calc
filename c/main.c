@@ -341,6 +341,10 @@ ASTNode *make_node(ASTNodeKind kind, OP op, ASTNode *left, ASTNode *right, int v
 ASTNode *parse(void)
 {
     ASTNode *node = parse_expr();
+
+    Token tok = peek();
+    if (tok.kind != TOK_EOF) report_error(tok.lexeme.start, "unexpected token");
+
     da_reset(g_toks);
     g_index = 0;
     return node;

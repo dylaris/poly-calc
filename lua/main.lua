@@ -168,6 +168,7 @@ function Parser.new(toks)
     local obj = setmetatable({}, Parser)
     obj.tokens = toks
     obj.curr = 1
+    obj.root = nil
     return obj
 end
 
@@ -177,6 +178,15 @@ end
 
 function Parser:consume()
     self.curr = self.curr + 1
+end
+
+function Parser:parse()
+    self.root = self:parse_expr()
+
+    tok = self:peek()
+    if tok.kind ~= TokenKind.EOF then
+        report_error(tok.position, "unexpected token")
+    end
 end
 
 function Parser:parse_expr()
@@ -297,10 +307,10 @@ while true do
     -- print(lexer)
 
     local parser = Parser.new(lexer.tokens)
-    local root = parser:parse_expr()
+    parser:parse()
     if has_error then goto continue end
 
-    print("result: " .. evaluate(root))
+    print("result: " .. evaluate(parser.root))
 ::continue::
 end
 
